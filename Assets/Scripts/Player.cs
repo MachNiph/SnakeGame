@@ -37,6 +37,9 @@ namespace Scripts
         [SerializeField]
         private List<GameObject> bodies;
 
+        public GameObject PauseMenuUI;
+        private bool isDead;
+
         private void Start()
         {
             moveVector = Vector3.right;
@@ -121,7 +124,7 @@ namespace Scripts
             RaycastHit2D hitInfo = Physics2D.CircleCast(bodies[0].transform.position, radius, bodies[0].transform.right, 0, bodyLayerMask);
             if (hitInfo.collider != null)
             {
-                print("die");
+                PlayerDeath();
             }
         }
 
@@ -134,7 +137,7 @@ namespace Scripts
 
             if (!shouldMove)
             {
-                print("die");
+                PlayerDeath();
             }
 
             return shouldMove;
@@ -144,6 +147,13 @@ namespace Scripts
         {
             Gizmos.color = Color.red;
             Gizmos.DrawWireSphere(bodies[0].transform.position, radius);
+        }
+
+        private void PlayerDeath()
+        {
+            Time.timeScale = 0f;
+            PauseMenuUI.SetActive(true);
+            
         }
     }
 }
