@@ -22,7 +22,7 @@ namespace Scripts
             {
                 yield return new WaitForSeconds(5);
                 Destroy(spawnedFood);
-                spawnedFood = Instantiate(food, new Vector2(Random.Range(-8, 9), Random.Range(-4, 5)), Quaternion.identity);
+                spawnedFood = Instantiate(food, new Vector2(Random.Range(-5, 6), Random.Range(-3.5f, 4.5f)), Quaternion.identity);
             }
         }
     }

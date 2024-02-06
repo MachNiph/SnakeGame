@@ -1,93 +1,149 @@
-using System.Collections;
 using System.Collections.Generic;
+using Unity.Mathematics;
 using UnityEngine;
 using UnityEngine.InputSystem;
-using UnityEngine.UIElements;
 
-public class Player : MonoBehaviour
+namespace Scripts
 {
-    private Vector2 inputVector;
-    private Vector2 rotateVector;
-    private Vector2 backPosition;
-    [SerializeField] Vector2 maxPositionLimit;
-    [SerializeField] GameObject body;
-    [SerializeField] GameObject newBody;
-
-    [SerializeField] private float time;
-    [SerializeField] private float maxTime;
-
-    void Start()
+    public class SnakeController : MonoBehaviour
     {
-        inputVector = Vector2.right;
-    }
+        [SerializeField]
+        private Vector3 moveVector;
+        [SerializeField]
+        private Vector3 rotationVector;
 
-    void Update()
-    {
-        Move();
-        eatFood();
-    }
+        [SerializeField]
+        private float time;
+        [SerializeField]
+        private float maxTime = 1;
 
-    void Move()
-    {
-        if (Keyboard.current.upArrowKey.isPressed)
+        [SerializeField]
+        private bool forceMove;
+        [SerializeField]
+        private Vector2 maxLimit;
+
+        [SerializeField]
+        private float radius;
+        [SerializeField]
+        private LayerMask foodLayerMask;
+        [SerializeField]
+        private LayerMask bodyLayerMask;
+
+        [SerializeField]
+        private int foodCount;
+
+        [SerializeField]
+        private GameObject bodyPrefab;
+        [SerializeField]
+        private List<GameObject> bodies;
+
+        private void Start()
         {
-            inputVector = Vector2.up;
+            moveVector = Vector3.right;
+            rotationVector = Vector3.forward * -90;
+
         }
-        if (Keyboard.current.downArrowKey.isPressed)
+
+        private void Update()
         {
-            inputVector = Vector2.down;
-        }
-        if (Keyboard.current.leftArrowKey.isPressed)
-        {
-            inputVector = Vector2.left;
-        }
-        if (Keyboard.current.rightArrowKey.isPressed)
-        {
-            inputVector = Vector2.right;
+            Move();
+            Eat();
+            BodyHit();
         }
 
-        time -= Time.deltaTime;
-
-        if (time <= 0 && canMove())
+        private void Move()
         {
-            transform.position += (Vector3)inputVector;
-            float angle = Mathf.Atan2(inputVector.y, inputVector.x) * Mathf.Rad2Deg;
-            transform.rotation = Quaternion.Euler(0, 0, angle);
-            time = maxTime;
-        }
-    }
-
-    private bool canMove()
-    {
-        bool canMove = ((transform.position.x < maxPositionLimit.x) &&
-            (transform.position.x > -maxPositionLimit.x) &&
-            (transform.position.y > -maxPositionLimit.y &&
-             transform.position.y < maxPositionLimit.y));
-
-        return canMove;
-    }
-
-    void eatFood()
-    {
-        float castLength = 0.5f;
-        LayerMask foodLayer = LayerMask.GetMask("Food");
-        RaycastHit2D hit = Physics2D.Raycast(transform.position, inputVector, castLength, foodLayer);
-
-        if (hit.collider != null)
-        {
-            Destroy(hit.collider.gameObject);
-
-            if (newBody != null)
+            if (Keyboard.current.leftArrowKey.wasPressedThisFrame && !(moveVector.x > 0) && !(moveVector.x < 0))
             {
-                backPosition = (Vector2)newBody.transform.position + (-inputVector);
+                forceMove = true;
+                moveVector = Vector3.left;
+                rotationVector = Vector3.forward * 90;
             }
-            else
+            if (Keyboard.current.rightArrowKey.wasPressedThisFrame && !(moveVector.x < 0) && !(moveVector.x > 0))
             {
-                backPosition = (Vector2)transform.position + (-inputVector);
+                forceMove = true;
+                moveVector = Vector3.right;
+                rotationVector = Vector3.forward * -90;
+            }
+            if (Keyboard.current.upArrowKey.wasPressedThisFrame && !(moveVector.y < 0) && !(moveVector.y > 0))
+            {
+                forceMove = true;
+                moveVector = Vector3.up;
+                rotationVector = Vector3.forward * 0;
+            }
+            if (Keyboard.current.downArrowKey.wasPressedThisFrame && !(moveVector.y > 0) && !(moveVector.y < 0))
+            {
+                forceMove = true;
+                moveVector = Vector3.down;
+                rotationVector = Vector3.forward * -180;
             }
 
-            newBody = Instantiate(body, backPosition, Quaternion.identity);
-            newBody.transform.parent = transform;
+            time -= Time.deltaTime;
+            if (time <= 0 || forceMove)
+            {
+                moveVector = moveVector.normalized;
+                
+                if (ShouldMove())
+                {
+                    for (int i = bodies.Count - 1; i >= 0; i--)
+                    {
+                        if (i == 0)
+                        {
+                            bodies[i].transform.position += moveVector;
+                            bodies[i].transform.rotation = Quaternion.Euler(rotationVector);
+                        }
+                        else
+                        {
+                            bodies[i].transform.position = bodies[i - 1].transform.position;
+                            bodies[i].transform.rotation = bodies[i - 1].transform.rotation;
+                        }
+                    }
+                }
+                time = maxTime;
+                forceMove = false;
+            }
+        }
+
+        private void Eat()
+        {
+            RaycastHit2D hitInfo = Physics2D.CircleCast(bodies[0].transform.position, radius, bodies[0].transform.right, 0, foodLayerMask);
+            if (hitInfo.collider != null)
+            {
+                Destroy(hitInfo.collider.gameObject);
+                foodCount++;
+                GameObject body = Instantiate(bodyPrefab, bodies[bodies.Count - 1].transform.position - bodies[bodies.Count - 1].transform.right, Quaternion.identity, transform);
+                bodies.Add(body);
+            }
+        }
+
+        private void BodyHit()
+        {
+            RaycastHit2D hitInfo = Physics2D.CircleCast(bodies[0].transform.position, radius, bodies[0].transform.right, 0, bodyLayerMask);
+            if (hitInfo.collider != null)
+            {
+                print("die");
+            }
+        }
+
+        private bool ShouldMove()
+        {
+            bool shouldMove = (moveVector.x > 0 && bodies[0].transform.position.x < maxLimit.x) ||
+                    (moveVector.x < 0 && bodies[0].transform.position.x > -maxLimit.x) ||
+                    (moveVector.y > 0 && bodies[0].transform.position.y < maxLimit.y) ||
+                    (moveVector.y < 0 && bodies[0].transform.position.y > -maxLimit.y);
+
+            if (!shouldMove)
+            {
+                print("die");
+            }
+
+            return shouldMove;
+        }
+
+        private void OnDrawGizmos()
+        {
+            Gizmos.color = Color.red;
+            Gizmos.DrawWireSphere(bodies[0].transform.position, radius);
         }
     }
 }
