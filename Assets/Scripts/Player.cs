@@ -11,6 +11,7 @@ namespace Scripts
         private Vector3 moveVector;
         [SerializeField]
         private Vector3 rotationVector;
+        
 
         [SerializeField]
         private float time;
@@ -35,15 +36,22 @@ namespace Scripts
         [SerializeField]
         private GameObject bodyPrefab;
         [SerializeField]
-        private List<GameObject> bodies;
+        public List<GameObject> bodies;
 
         public GameObject PauseMenuUI;
         private bool isDead;
+
+        [SerializeField] private AudioSource audioSource;
+        [SerializeField] private AudioClip[] audioClip;
+        
 
         private void Start()
         {
             moveVector = Vector3.right;
             rotationVector = Vector3.forward * -90;
+            audioSource = GetComponent<AudioSource>();
+            
+          
 
         }
 
@@ -112,15 +120,21 @@ namespace Scripts
             RaycastHit2D hitInfo = Physics2D.CircleCast(bodies[0].transform.position, radius, bodies[0].transform.right, 0, foodLayerMask);
             if (hitInfo.collider != null)
             {
+                if(audioSource != null)
+                {
+                    audioSource.clip = audioClip[0];
+                    audioSource.enabled = true;
+                    audioSource.PlayOneShot(audioSource.clip);
+                }
                 Destroy(hitInfo.collider.gameObject);
                 foodCount++;
-                GameObject body = Instantiate(bodyPrefab, bodies[bodies.Count - 1].transform.position - bodies[bodies.Count - 1].transform.right, Quaternion.identity, transform);
+                GameObject body = Instantiate(bodyPrefab, bodies[bodies.Count - 1].transform.position - bodies[bodies.Count - 1].transform.up, Quaternion.identity, transform);
                 bodies.Add(body);
             }
         }
 
         private void BodyHit()
-        {
+        { 
             RaycastHit2D hitInfo = Physics2D.CircleCast(bodies[0].transform.position, radius, bodies[0].transform.right, 0, bodyLayerMask);
             if (hitInfo.collider != null)
             {
@@ -151,7 +165,13 @@ namespace Scripts
 
         private void PlayerDeath()
         {
-            Time.timeScale = 0f;
+            Debug.Log("Die");
+            if(audioSource != null)
+            {
+                audioSource.clip = audioClip[1];
+                audioSource.PlayOneShot(audioSource.clip);
+            }
+            Time.timeScale = 0;
             PauseMenuUI.SetActive(true);
             
         }

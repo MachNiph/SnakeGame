@@ -11,18 +11,33 @@ namespace Scripts
         [SerializeField]
         private GameObject spawnedFood;
 
+        [SerializeField]private Vector2 gridVector;
+        private SnakeController controller;
+        
+
         private void Start()
         {
+            controller = FindObjectOfType<SnakeController>();
             StartCoroutine(SpawnCoroutine());
+            
         }
 
         private IEnumerator SpawnCoroutine()
         {
             while (true)
             {
+                
                 yield return new WaitForSeconds(5);
+                int gridValueX = Random.Range(-5, 5 + 1);
+                int gridValueY = Random.Range(-4, 4 + 1);
+
+                gridVector.x = gridValueX + 0.46f;
+                gridVector.y = gridValueY + 0.46f;
+
                 Destroy(spawnedFood);
-                spawnedFood = Instantiate(food, new Vector2(Random.Range(-5, 6), Random.Range(-3.5f, 4.5f)), Quaternion.identity);
+                
+
+              
             }
         }
     }
