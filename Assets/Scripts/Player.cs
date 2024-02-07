@@ -117,8 +117,8 @@ namespace Scripts
 
         private void Eat()
         {
-            RaycastHit2D hitInfo = Physics2D.CircleCast(bodies[0].transform.position, radius, bodies[0].transform.right, 0, foodLayerMask);
-            if (hitInfo.collider != null)
+            RaycastHit2D hitInfoFood = Physics2D.CircleCast(bodies[0].transform.position, radius, bodies[0].transform.right, 0, foodLayerMask);
+            if (hitInfoFood.collider != null)
             {
                 if(audioSource != null)
                 {
@@ -126,7 +126,7 @@ namespace Scripts
                     audioSource.enabled = true;
                     audioSource.PlayOneShot(audioSource.clip);
                 }
-                Destroy(hitInfo.collider.gameObject);
+                Destroy(hitInfoFood.collider.gameObject);
                 foodCount++;
                 GameObject body = Instantiate(bodyPrefab, bodies[bodies.Count - 1].transform.position - bodies[bodies.Count - 1].transform.up, Quaternion.identity, transform);
                 bodies.Add(body);
@@ -135,8 +135,8 @@ namespace Scripts
 
         private void BodyHit()
         { 
-            RaycastHit2D hitInfo = Physics2D.CircleCast(bodies[0].transform.position, radius, bodies[0].transform.right, 0, bodyLayerMask);
-            if (hitInfo.collider != null)
+            RaycastHit2D hitInfoBody= Physics2D.CircleCast(bodies[0].transform.position, radius, bodies[0].transform.right, 0, bodyLayerMask);
+            if (hitInfoBody.collider != null && hitInfoBody.collider.tag == "Body")
             {
                 PlayerDeath();
             }
