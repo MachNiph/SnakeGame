@@ -136,7 +136,7 @@ namespace Scripts
         private void BodyHit()
         { 
             RaycastHit2D hitInfoBody= Physics2D.CircleCast(bodies[0].transform.position, radius, bodies[0].transform.right, 0, bodyLayerMask);
-            if (hitInfoBody.collider != null && hitInfoBody.collider.tag == "Body")
+            if (hitInfoBody.collider != null )
             {
                 PlayerDeath();
             }

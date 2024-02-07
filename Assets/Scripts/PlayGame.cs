@@ -7,10 +7,8 @@ public class PlayGame : MonoBehaviour
 {
     public void Play()
     {
-        if(Time.timeScale < 1)
-        {
-            Time.timeScale = 1;
-        }
+       
+        Time.timeScale = 1;
         SceneManager.LoadScene("Gameplay");
     }
 }
